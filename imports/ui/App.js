@@ -1,11 +1,11 @@
-import React, { Component } from "react";
-import ReactDOM from "react-dom";
-import { withTracker } from "meteor/react-meteor-data";
-import { Tasks } from "../api/tasks.js";
-import AccountsUIWrapper from "./AccountsUIWrapper.js";
-import { Meteor } from "meteor/meteor";
+import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
+import { withTracker } from 'meteor/react-meteor-data';
+import { Tasks } from '../api/tasks.js';
+import AccountsUIWrapper from './AccountsUIWrapper.js';
+import { Meteor } from 'meteor/meteor';
 
-import Task from "./Task.js";
+import Task from './Task.js';
 
 // App component - represents the whole app
 class App extends Component {
@@ -47,10 +47,10 @@ class App extends Component {
 
     // Find the text field via the React ref
     const text = ReactDOM.findDOMNode(this.refs.textInput).value.trim();
-    Meteor.call("tasks.insert", text);
+    Meteor.call('tasks.insert', text);
 
     // Clear form
-    ReactDOM.findDOMNode(this.refs.textInput).value = "";
+    ReactDOM.findDOMNode(this.refs.textInput).value = '';
   }
 
   render() {
@@ -95,7 +95,7 @@ class App extends Component {
 }
 
 export default withTracker(() => {
-  Meteor.subscribe("tasks");
+  Meteor.subscribe('tasks');
   return {
     tasks: Tasks.find({}, { sort: { createdAt: -1 } }).fetch(),
     incompleteCount: Tasks.find({ checked: { $ne: true } }).count(),
