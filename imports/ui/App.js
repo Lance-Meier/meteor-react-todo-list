@@ -1,30 +1,21 @@
-import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useRef } from 'react';
+import { Meteor } from 'meteor/meteor';
 import { withTracker } from 'meteor/react-meteor-data';
 import { Tasks } from '../api/tasks.js';
 import AccountsUIWrapper from './AccountsUIWrapper.js';
-import { Meteor } from 'meteor/meteor';
-
 import Task from './Task.js';
 
 // App component - represents the whole app
-class App extends Component {
-  constructor(props) {
-    super(props);
+const App = ({ tasks, currentUser, incompleteCount }) => {
+  const [hideCompleted, toggleHideCompleted] = useState(false);
+  const textInput = useRef(null);
 
-    this.state = {
-      hideCompleted: false
-    };
-  }
-
-  renderTasks() {
-    let filteredTasks = this.props.tasks;
-    if (this.state.hideCompleted) {
-      filteredTasks = filteredTasks.filter(task => !task.checked);
-    }
+  const renderTasks = () => {
+    let filteredTasks = tasks;
+    hideCompleted &&
+      (filteredTasks = filteredTasks.filter(task => !task.checked));
     return filteredTasks.map(task => {
-      const currentUserId =
-        this.props.currentUser && this.props.currentUser._id;
+      const currentUserId = currentUser && currentUser._id;
       const showPrivateButton = task.owner === currentUserId;
       return (
         <Task
@@ -34,71 +25,57 @@ class App extends Component {
         />
       );
     });
-  }
+  };
 
-  toggleHideCompleted() {
-    this.setState({
-      hideCompleted: !this.state.hideCompleted
-    });
-  }
-
-  handleSubmit(event) {
-    event.preventDefault();
-
-    // Find the text field via the React ref
-    const text = ReactDOM.findDOMNode(this.refs.textInput).value.trim();
+  const handleSubmit = e => {
+    e.preventDefault();
+    const inputField = textInput.current
+    const text = inputField.value.trim();
     Meteor.call('tasks.insert', text);
+    inputField.value = '';
+  };
 
-    // Clear form
-    ReactDOM.findDOMNode(this.refs.textInput).value = '';
-  }
-
-  render() {
-    return (
-      <>
-        <nav id="nav-bar">Top Nav</nav>
-        <div className="container">
-          <header>
-            <h1>Todo List ({this.props.incompleteCount})</h1>
-            <label className="hide-completed">
+  return (
+    <>
+      <nav id="nav-bar">Top Nav</nav>
+      <div className="container">
+        <header>
+          <h1>Todo List ({incompleteCount})</h1>
+          <label className="hide-completed">
+            <input
+              type="checkbox"
+              readOnly
+              checked={hideCompleted}
+              onClick={() => toggleHideCompleted(!hideCompleted)}
+            />
+            Hide Completed Tasks
+          </label>
+          <AccountsUIWrapper />
+          {currentUser && (
+            <form className="new-task" onSubmit={(e) => handleSubmit(e)}>
               <input
-                type="checkbox"
-                readOnly
-                checked={this.state.hideCompleted}
-                onClick={this.toggleHideCompleted.bind(this)}
+                type="text"
+                ref={textInput}
+                placeholder="Type to add new tasks"
               />
-              Hide Completed Tasks
-            </label>
-            <AccountsUIWrapper />
-            {this.props.currentUser && (
-              <form
-                className="new-task"
-                onSubmit={this.handleSubmit.bind(this)}
-              >
-                <input
-                  type="text"
-                  ref="textInput"
-                  placeholder="Type to add new tasks"
-                />
-              </form>
-            )}
-          </header>
-          {this.props.currentUser ? (
-            <ul>{this.renderTasks()}</ul>
-          ) : (
-            <p>Please log in to view your task list</p>
+            </form>
           )}
-        </div>
-      </>
-    );
-  }
-}
+        </header>
+        {currentUser ? (
+          <ul>{renderTasks}</ul>
+        ) : (
+          <p>Please log in to view your task list</p>
+        )}
+      </div>
+    </>
+  );
+};
 
 export default withTracker(() => {
   Meteor.subscribe('tasks');
   return {
-    tasks: Tasks.find({}, { sort: { createdAt: -1 } }).fetch(),
+    currentUser: Meteor.user(),
     incompleteCount: Tasks.find({ checked: { $ne: true } }).count(),
-    currentUser: Meteor.user()
+    tasks: Tasks.find({}, { sort: { createdAt: -1 } }).fetch()
   };
 })(App);
