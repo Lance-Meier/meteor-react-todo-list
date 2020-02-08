@@ -29,7 +29,7 @@ const App = ({ tasks, currentUser, incompleteCount }) => {
 
   const handleSubmit = e => {
     e.preventDefault();
-    const inputField = textInput.current
+    const inputField = textInput.current;
     const text = inputField.value.trim();
     Meteor.call('tasks.insert', text);
     inputField.value = '';
@@ -52,7 +52,7 @@ const App = ({ tasks, currentUser, incompleteCount }) => {
           </label>
           <AccountsUIWrapper />
           {currentUser && (
-            <form className="new-task" onSubmit={(e) => handleSubmit(e)}>
+            <form className="new-task" onSubmit={e => handleSubmit(e)}>
               <input
                 type="text"
                 ref={textInput}
@@ -62,7 +62,7 @@ const App = ({ tasks, currentUser, incompleteCount }) => {
           )}
         </header>
         {currentUser ? (
-          <ul>{renderTasks}</ul>
+          <ul>{renderTasks()}</ul>
         ) : (
           <p>Please log in to view your task list</p>
         )}
